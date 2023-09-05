@@ -102,8 +102,8 @@ namespace chatterBox.Message
         {
             var currentUserId = _currentUser.GetId();
             var normalizedQuery = query.ToLower();
-            var SearchedMessages = _dbContext.messageInfo.Where(m => (m.SenderId == currentUserId || m.ReceiverId == currentUserId) && m.MsgBody
-            .ToLower().Contains(normalizedQuery)).ToList();
+            var SearchedMessages = await _dbContext.messageInfo.Where(m => (m.SenderId == currentUserId || m.ReceiverId == currentUserId) && m.MsgBody
+            .ToLower().Contains(normalizedQuery)).ToListAsync();
             return SearchedMessages;
         }
         

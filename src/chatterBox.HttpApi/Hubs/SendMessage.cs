@@ -20,28 +20,38 @@ namespace chatterBox.Hubs
             new ConnectionMapping<string>();
 
 
-        //private readonly ConnectionMapping<string> _connections;
-
-        //public SendMessage(ConnectionMapping<string> connections)
-        //{
-        //    _connections = connections;
-        //}
-        //?? throw new ArgumentNullException(nameof(connections))
         public async Task NewMessage(MessageInfo message)
         {
-            // Get the recipient's name from the message (assuming the recipient name is in the 'to' property).
             string recipientID = Convert.ToString(message.ReceiverId);
-
-            // Get the connection IDs associated with the recipient's name.
             var connectionIds = _connections.GetConnections(recipientID);
 
-            // Send the message to each of the recipient's connections.
             foreach (var connectionId in connectionIds)
             {
                 await Clients.Client(connectionId).SendAsync("ReceiveMessage", message);
             }
         }
+        public async Task EditMessage(MessageInfo message)
+        {
+            string recipientID = Convert.ToString(message.ReceiverId);
+            var connectionIds = _connections.GetConnections(recipientID);
 
+            foreach (var connectionId in connectionIds)
+            {
+                await Clients.Client(connectionId).SendAsync("ReceiveEditMessage", message);
+            }
+        }
+
+        public async Task DeleteMessage(MessageInfo message)
+        {
+            
+            string recipientID = Convert.ToString(message.ReceiverId);
+            var connectionIds = _connections.GetConnections(recipientID);
+
+            foreach (var connectionId in connectionIds)
+            {
+                await Clients.Client(connectionId).SendAsync("ReceiveDeleteMessage", message);
+            }
+        }
         public override Task OnConnectedAsync()
         {
 
