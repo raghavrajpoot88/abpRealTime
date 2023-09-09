@@ -63,14 +63,14 @@ namespace chatterBox.Message
             }
 
         }
-        public async Task<List<MessageInfo>> GetMessagesAsync(Guid receiverId, DateTime? before, int count = 20, string sort = "asc")
+        public List<MessageInfo> GetMessagesAsync(Guid receiverId, DateTime? before, int count = 20, string sort = "asc")
         {
             var currentUserId = _currentUser.GetId();
-            var result = await _dbContext.messageInfo.Where(u => (u.ReceiverId == receiverId && u.SenderId == currentUserId)
-                || (u.SenderId == receiverId && u.ReceiverId == currentUserId) && (before == null || u.TimeStamp < before))
-                .OrderBy(m => m.TimeStamp).ToListAsync();
+            var result =  _dbContext.messageInfo.Where(u => ((u.ReceiverId == receiverId && u.SenderId == currentUserId)
+                || (u.SenderId == receiverId && u.ReceiverId == currentUserId)))
+                .OrderBy(m => m.TimeStamp).ToList();
             if (sort.ToLower() == "desc") result.Reverse();
-            if (before != null) result = await _dbContext.messageInfo.Where(m => m.TimeStamp < before).ToListAsync();
+            if (before != null) result = result.Where(m => m.TimeStamp < before).ToList();
             if (result.Count > count) result = result.TakeLast(count).ToList();
 
             return result;
@@ -98,12 +98,16 @@ namespace chatterBox.Message
             }
             return false;
         }
-        public async Task<IEnumerable<MessageInfo>> GetSearch(string query)
+        public IEnumerable<MessageInfo> GetSearch(string query)
         {
             var currentUserId = _currentUser.GetId();
-            var normalizedQuery = query.ToLower();
-            var SearchedMessages = await _dbContext.messageInfo.Where(m => (m.SenderId == currentUserId || m.ReceiverId == currentUserId) && m.MsgBody
-            .ToLower().Contains(normalizedQuery)).ToListAsync();
+            string[] Keywords = query.ToLower().Split(new[] { ' ' });
+
+            var messages =_dbContext.messageInfo.Where(m => (m.SenderId== currentUserId || m.ReceiverId == currentUserId)).ToList();
+
+            var SearchedMessages = messages
+            .Where(m => Keywords.Any(keyword => m.MsgBody.ToLower().Contains(keyword)))
+                .ToList();
             return SearchedMessages;
         }
         
