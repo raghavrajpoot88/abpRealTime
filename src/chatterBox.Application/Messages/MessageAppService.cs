@@ -17,7 +17,7 @@ using Volo.Abp.Users;
 
 namespace chatterBox.Message
 {
-    //CrudAppService<MessageInfo, MessageDto, Guid, PagedAndSortedResultRequestDto>
+    
     [Authorize]
     public class MessageAppService : ApplicationService
     {
@@ -51,8 +51,6 @@ namespace chatterBox.Message
             };
             var result = await _dbContext.messageInfo.AddAsync(message);
             _dbContext.SaveChanges();
-            //ObjectMapper.Map(MessageInfo, message);
-            //var result= await _repository.InsertAsync(message);
             if (result != null)
             {
                 return message;
@@ -63,12 +61,13 @@ namespace chatterBox.Message
             }
 
         }
-        public List<MessageInfo> GetMessagesAsync(Guid receiverId, DateTime? before, int count = 20, string sort = "asc")
+        public async Task<List<MessageInfo>> GetMessagesAsync(Guid receiverId, DateTime? before, int count = 20, string sort = "asc")
         {
             var currentUserId = _currentUser.GetId();
-            var result =  _dbContext.messageInfo.Where(u => ((u.ReceiverId == receiverId && u.SenderId == currentUserId)
-                || (u.SenderId == receiverId && u.ReceiverId == currentUserId)))
-                .OrderBy(m => m.TimeStamp).ToList();
+            var result = await _dbContext.messageInfo.Where(u => (u.ReceiverId == receiverId && u.SenderId == currentUserId)
+                || (u.SenderId == receiverId && u.ReceiverId == currentUserId))
+                .OrderBy(m => m.TimeStamp)
+                .ToListAsync();
             if (sort.ToLower() == "desc") result.Reverse();
             if (before != null) result = result.Where(m => m.TimeStamp < before).ToList();
             if (result.Count > count) result = result.TakeLast(count).ToList();
